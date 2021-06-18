@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <title></title>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script> 
+   
+    <style>
+        #enterID {display:none;position:relative;top:200px;left:40%}
+        #client {display:none;}
+        #server {display:none;}
+        p {margin:0;} 
+        .divclass {display: inline-table;float: left}
+        .scrollclass {display: block;overflow: auto;height: 300px;}
+        * {
+  box-sizing: border-box;
+        }
+        h3 {display: inline-flex}
+
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+  width: 150%;
+}
+#sürec_tablosu {display:none;}
+#sepet {display:none;background-color: grey;}
+#sepet_table {background-color: lightgrey;}
+    </style>
+</head>
+<body>
+
+    <div id="enterID">
+        <form method="post"  autocomplete="off">
+            <p>SICIL NO:<input id="ID" type="text" maxlength="15" required />ORNEK:10010</p>
+            <p>ODA NUMARASI:<input id="ROOM" type="text" maxlength="4" required />ORNEK:1006</p>
+            <p><input id="submit" type="submit" value="submit" /></p>
+        </form>
+    </div>
+    <div id="client">
+        <p id="welcome_client"></p>      
+        
+        <button id="change_customer" type="button" ><h4>Oturum Kapat</h4></button>
+        <button id="show_order_table"><h4>Sipariş verme ekranını göster</h4></button>
+        <button id="show_current_orders" type="button" ><h4>Güncel siparişi göster</h4></button>
+        <br>
+        
+    <div id="row" >
+        <div id="sipariş_tablosu" class="divclass" >
+            <div class="divclass">
+           <p><button id="show_sıkkullanılanlar"  type="button"  style="width: 100%"><h4>SIK KULLANILANLAR</h4></button></p>
+           <p><button id="show_kahve" type="button"  style="width: 100%"><h4>KAHVELER</h4></button></p>
+           <p><button id="show_çay"  type="button" style="width: 100%" ><h4>ÇAYLAR</h4></button></p>
+           <p><button id="show_bitkiçayı"  type="button" style="width: 100%"><h4>BİTKİ ÇAYLARI</h4></button></p>
+           <p><button id="show_sıcakiçecekler"  type="button" style="width: 100%"><h4>SICAK İÇECEKLER</h4></button></p>
+           <p><button id="show_yiyecekler"  type="button" style="width: 100%" ><h4>YİYECEKLER</h4></button></p>
+           <p><button id="show_soğukiçecekler"  type="button" style="width: 100%" ><h4>SOĞUK İÇECEKLER</h4></button></p>
+           <p><button id="show_tatlılar"  type="button"  style="width: 100%"><h4>TATLILAR</h4></button></p>
+            </div>
+
+            <div class="divclass"> <table  id="kahve_table" border="1" ></table></div>
+                <div class="divclass">  <table  id="cay_table" border="1"  ></table></div>
+                    <div class="divclass"><table  id="bitki_cayi_table" border="1"  ></table></div>
+                        <div class="divclass"> <table  id="sicak_icecek_table" border="1" ></table></div>
+                            <div class="divclass"><table  id="yiyecek_table" border="1"  ></table></div>
+                                <div class="divclass"><table  id="soguk_icecek_table" border="1"  ></table></div>
+                                    <div class="divclass"><table  id="tatli_table" border="1"  ></table></div>
+                                        <div class="divclass"><table id="sıkkullanılanlar_table" border="1"></table></div>
+        </div>
+
+            
+                
+        
+            
+            
+        </div>
+        <div id="sepet" class="divclass" style="width: 50%"  >
+            <div id="sepet_div" class="divclass">
+
+               <div class="divclass" style="background-color: lightgrey">  
+                    <p id="sepet_text"></p>
+                    <h3 id="sum">Toplam:0 TL</h3>
+              </div>
+
+
+            </div>
+            <div>
+            <button id="submitorder" type="button" ><h4>Sipariş Ver</h4></button>
+            <button id="cancel_order" type="button"><h4>Sipariş iptal</h4></button>
+            <button id="updateorder" type="button">siparis_guncelle</button>
+            <button id="iptal" type="button">iptal</button>
+            </div>
+        </div>
+        </div>
+            
+     
+            <p id="temp" style="display:none;">this will change</p>
+        <div id="sürec_tablosu">
+            <table id="sürecT" border="1" >
+                <caption><h3>Süreç İçerisinde ki Siparişler </h3></caption>
+                <tr style="text-align:center">
+                    <th>Sipariş durumu</th>
+                    <th>Sipariş verilme tarihi ve saati</th>
+                    <th width="50%">Sipariş özet</th>
+                    
+                </tr>
+            </table>
+        </div>    
+    </div>
+    <div id="server">
+        <p id="welcome_admin"></p>
+
+        <p> <button id="change_admin" type="button">Oturum Kapat</button> </p>
+        <table id="admin_siparisler" border="1">
+            <caption><h3>TESLİM EDİLMEYİ BEKLEYEN SİPARİŞLER</h3></caption>
+            <tr>
+                <th>Sipariş teslim odası</th>
+                <th>Sipariş özeti</th>
+                <th>Tutar</th>
+                <th>Sipariş durumu</th>
+            </tr>
+        </table>
+    </div>
+    <script src="client_validation.js"></script>
+    <script src="client_cerez.js"></script>
+    <script src="client.js"></script>
+
+ 
+</body>
+</html>

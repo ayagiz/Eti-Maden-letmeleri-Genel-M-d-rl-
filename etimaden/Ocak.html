@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <title></title>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script> 
+   
+    <style>
+        #enterID {display:none;position:relative;top:200px;left:40%}
+        #client {display:none;}
+        #server {display:none;}
+        p {margin:0;} 
+        .divclass {display: inline-table;float: left}
+        .scrollclass {display: block;overflow: auto;height: 300px;}
+        * {
+  box-sizing: border-box;
+        }
+        h3 {display: inline-flex}
+
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+  width: 150%;
+}
+#sürec_tablosu {display:none;}
+#sepet {display:none;background-color: grey;}
+#sepet_table {background-color: lightgrey;}
+    </style>
+</head>
+<body>
+
+    <div id="enterID">
+        <form method="post"  autocomplete="off">
+            <p>SICIL NO:<input id="ID" type="text" maxlength="15" required />ORNEK:10010</p>
+            <p>ODA NUMARASI:<input id="ROOM" type="text" maxlength="4" required />ORNEK:1006</p>
+            <p><input id="submit" type="submit" value="submit" /></p>
+        </form>
+    </div>
+    <div id="server">
+        <p id="welcome_admin"></p>
+
+        <p> <button id="change_admin" type="button">Oturum Kapat</button> </p>
+        <table id="admin_siparisler" border="1">
+            <caption><h3>TESLİM EDİLMEYİ BEKLEYEN SİPARİŞLER</h3></caption>
+            <tr>
+                <th>Sipariş teslim odası</th>
+                <th>Sipariş özeti</th>
+                <th>Tutar</th>
+                <th>Sipariş durumu</th>
+            </tr>
+        </table>
+    </div>
+    <script src="ocak_validation.js"></script>
+    <script src="ocak.js"></script>
+    <script src="ocak_cerez.js"></script>
+ 
+</body>
+</html>

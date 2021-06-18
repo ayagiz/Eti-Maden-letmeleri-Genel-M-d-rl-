@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title></title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <style>
+        #enterID {display:none;position:relative;top:200px;left:40%}
+        #client {display:none;}
+        #server {display:none;}
+        p {margin:0;}  
+    </style>
+</head>
+
+<body>
+
+    <div id="enterID">
+        <form method="post"  autocomplete="off">
+            <p>SICIL NO:<input id="ID" type="text" maxlength="15" required />ORNEK:10010</p>
+            <p>ODA NUMARASI:<input id="ROOM" type="text" maxlength="4" required />ORNEK:1006</p>
+            <p><input id="submit" type="submit" value="submit" /></p>
+            
+        </form>
+    </div>
+    <div id="client">
+        <p id="welcome_client"></p>
+        
+        <p> <button id="change_customer" type="button">Kullanıcıyı değiştir</button> </p>
+        <script>
+            $(document).ready(function () {
+                $("#change_customer").click(function () {
+                    document.cookie = "ID=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+                    document.cookie = "ROOM=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+                    $("#client").hide();
+                    $("#enterID").show();
+                });
+            });
+
+        </script>
+        <div id="sipariş_tablosu">
+            <table id="siparist" border="1">
+                <caption><h3>Sipariş Tablosu</h3></caption>
+                <tr style="text-align:center">
+
+                    <th>Yiyecek ve İçecek</th>
+                    <th>Fiyat</th>
+                    <th style="width:10%">Adet</th>
+
+                </tr>
+
+            </table>
+            <button id="submitorder" type="button">submit order</button>
+            <button id="updateorder" type="button">siparis_guncelle</button>
+            <button id="iptal" type="button">iptal</button>
+            <h3 id="sum">Sum:0 TL</h3>
+            <p id="temp">this will change</p>
+        </div>
+        <script>
+           
+            var admin_ID = "1919";
+
+           
+           
+             
+            var id_array = new Array();
+            var fiyat_array = new Array();
+            function create_order_table(){
+                var xml = new XMLHttpRequest();
+
+                xml.onreadystatechange = function(){
+                    if(this.readyState == 4 && this.status == 200){
+                        var table = document.getElementById("siparist");
+                        var data = this.responseText.split(";");
+                        var innertext = "<caption><h3>Sipariş Tablosu</h3></caption><tr style=\"text-align:center\"><th>Yiyecek ve İçecek</th><th>Fiyat</th><th style=\"width:10%\">Adet</th></tr>";
+                    
+                        for(var i = 0 ; i < data.length-1; ++i){
+
+                            var specific_data = data[i].split(",");
+                            id_array.push(specific_data[0]);
+                            fiyat_array.push(parseFloat(specific_data[1]));
+                            innertext = innertext + "<tr><td>" + specific_data[2] + "</td><td>" + specific_data[1] + "</td><td> <button type=\"button\" id=\"d"+specific_data[0] + "\">-</button> <p style=\"width:5%\" id=\""+specific_data[0]+ "\">0</p>"
+                            + "<button type=\"button\" id=\"i" +specific_data[0]+ "\">+</button></tr>";
+                        }
+                        table.innerHTML = innertext;
+                        set_order_table_buttons();
+                    }
+
+                };
+                var url = "get_order_table_data.php";
+                xml.open("GET",url,true);
+                xml.send();
+            }
+            create_order_table();
+
+            var value_array = new Array();
+            var ocaklar = new Array();
+
+            ocaklar[0] = 2100;
+            ocaklar[1] = 1900;
+            ocaklar[2] = 1600;
+            ocaklar[3] = 1500;
+            ocaklar[4] = 1400;
+            ocaklar[5] = 1200;
+            ocaklar[6] = 1000;
+            ocaklar[7] = 600;
+            ocaklar[8] = 300;
+
+            var mevcut_odalar = new Array();
+            for (var i = 0; i < 22; ++i) {
+                mevcut_odalar[i] = new Array();
+            }
+            for (var i = 0; i < 22; ++i) {
+                mevcut_odalar[i] = [ i*100 ,i * 100 + 1, i * 100 + 1, i * 100 + 2, i * 100 + 3, i * 100  + 4, i * 100 + 5]; 
+            }
+            function check_admin_room(room) {
+                for (var i = 0; i < ocaklar.length; ++i) {
+                    if (ocaklar[i] === room)
+                        return true;
+                }
+                return false;
+            }
+            function check_room(room) {
+                for (var i = 0; i < mevcut_odalar.length; ++i) {
+                    for (var j = 0; j < mevcut_odalar[i].length; ++j) {
+
+                        if (room == mevcut_odalar[i][j])
+                            return true;
+                    }
+
+                }
+                return false;
+            }
+
+        </script>
+        <script>
+            
+            $(document).ready(function () {
+                $("#submitorder").click(function () {
+
+                    var sum_arr = $("#sum").text().split(":");
+
+                    sum_arr = sum_arr[1].split(" ");
+                    var sum = parseFloat(sum_arr[0]);
+                    
+
+                    if (sum != 0) {
+
+                        var xmlhttp = new XMLHttpRequest();
+                        console.log(sum);
+                        xmlhttp.onreadystatechange = function () {
+                            if (this.readyState == 4 && this.status == 200) {
+                                document.getElementById("temp").innerHTML = this.responseText;
+                                reset_table();
+                                show_orders();
+                                //update_admin_table
+
+                            }
+                        };
+
+                        for (var i = 0; i < id_array.length; ++i) {
+                            value_array[i] = parseInt($("#" + id_array[i]).text());
+                        }
+
+                        var url = "SubmitOrder.php?id=" + getCookie("ID") + "&value_array=" + JSON.stringify(value_array);
+
+                        /*for (var i = 0; i < id_array.length; ++i) {
+                            url = url + id_array[i] + "=" + value_array[i] + "&";
+                        }*/
+                        url = url + "&sum=" + sum + "&room=" + getCookie("ROOM");
+                        console.log(url);
+                        xmlhttp.open("GET", url, true);
+                        xmlhttp.send();
+                    }
+                    else {
+                        document.getElementById("temp").innerHTML = "Boş sipariş verilemez.";
+                    }
+
+                });
+                $("#updateorder").hide();
+                $("#updateorder").click(function () {
+                    
+                    var xml = new XMLHttpRequest();
+                    console.log("wth");
+                    xml.onreadystatechange = function () {
+                        console.log("fonsıyon ıcındeyım");
+                        if (this.readyState == 4 && this.status == 200) {
+                            console.log("fonsıyon ıcındeyım");
+                            document.getElementById("temp").innerHTML = this.responseText;
+                            $("#updateorder").hide();
+                            $("#iptal").hide();
+                            $("#sürec_tablosu").show();
+                            $("#change_customer").show();
+                            $("#submitorder").show();
+                            reset_table();
+                            show_orders();
+                            if(this.responseText == "error")
+                                alert("Sipariş durumu ocak başı tarafından değiştirildi, sonuç olarak sipariş artık güncellenemez.");
+                            //update_admin_table
+                    }
+                    };
+                    var sum_arr = $("#sum").text().split(":");
+                    sum_arr = sum_arr[1].split(" ");
+                    var sum = parseFloat(sum_arr[0]);
+
+                    for (var i = 0; i < id_array.length; ++i) {
+                        value_array[i] = parseFloat($("#" + id_array[i]).text());
+                    }
+
+                    var url = "siparis_guncelle.php?id=" + getCookie("siparisNO") + "&value_array=" + JSON.stringify(value_array);
+
+                    
+                    url = url + "&sum=" + sum;
+                    
+                    xml.open("GET", url, true);
+                    xml.send();
+                    
+                });
+                $("#iptal").hide();
+                $("#iptal").click(function () {
+                    
+                   
+                    
+                    
+                    var xml = new XMLHttpRequest();
+                    xml.onreadystatechange = function(){
+                        if(this.readyState == 4 && this.status == 200){
+                            console.log("siparis guncelleme iptali basarili.");
+                            $("#updateorder").hide();
+                            $("#iptal").hide();
+                            $("#sürec_tablosu").show();
+                            $("#change_customer").show();
+                            $("#submitorder").show();
+                            reset_table();
+                            show_orders();
+                        }
+                    }
+                    var url = "set_siparis_to_beklemede.php?id=" + getCookie("siparisNO");
+                    xml.open("GET",url,true);
+                    xml.send();
+                    document.cookie = "siparisNO=; expires=Thu, 18 Dec 2022 12:00:00 UTC";
+                });
+
+            });
+            function reset_table(){
+               for(var i = 0 ; i < id_array.length ; ++i){
+                   document.getElementById(id_array[i]).innerHTML = "0";
+               }
+                sum();
+                
+            }
+        </script>
+        <script>
+          function set_order_table_buttons() {
+                for(var i = 0 ; i < id_array.length ; ++i){
+                    set_order_table_button_events(id_array[i]);
+                }
+           }
+           function set_order_table_button_events(id){
+            $("#d"+id).click(function (){
+                       
+                       var value = parseInt($("#"+id).text());
+                       value = value - 1 ;
+                       if (value < 0)
+                       value = 0;
+
+                       document.getElementById(id).innerHTML = value;
+                   sum();
+                   });
+                   $("#i"+id).click(function(){
+                      
+                       var value = parseInt($("#"+id).text());
+                       value = value + 1;
+
+                       document.getElementById(id).innerHTML = value;
+                   sum();
+                   });
+           }
+        </script>
+        
+        <script>
+            function sum() {
+          
+                var sum = 0;
+                for(var i = 0 ; i < id_array.length ; ++i){
+                    sum = sum + parseInt($("#"+id_array[i]).text()) * parseFloat(fiyat_array[i]);
+                }
+                document.getElementById("sum").innerHTML = "Sum:" + sum + " TL";
+                return sum;
+            }
+        </script>
+
+        <div id="sürec_tablosu">
+            <table id="sürecT" border="1" width="50%">
+                <caption><h3>Süreç İçerisinde ki Siparişler </h3></caption>
+                <tr style="text-align:center">
+                    <th>Sipariş durumu</th>
+                    <th>Sipariş verilme tarihi ve saati</th>
+                    <th width="50%">Sipariş özet</th>
+                    
+                </tr>
+            </table>
+        </div>
+        <script>
+            function show_orders() {
+
+                var xml = new XMLHttpRequest();
+
+                xml.onreadystatechange = function () {
+
+                    if (this.readyState == 4 && this.status == 200) {
+                        var alldata = "";
+                        var surectable = document.getElementById("sürecT");
+                        var inner = "<caption><h3>Süreç İçerisinde ki Siparişler</h3></caption> <tr style=\"text_align:center\"> <th>Siparis durumu</th> <th>Siparis verilme tarihi ve saati </th> <th>Sipariş özet </th> ";
+                        if (this.responseText != "") {
+                            alldata = this.responseText.split("|");
+
+                            for (var i = 0; i < alldata.length-1; ++i) {
+                                var singledata = alldata[i].split("*");
+                                inner = inner + "<tr id=\"siparisid_" + i + "\"><td>" + singledata[0] + "</td><td>" + singledata[1] + "</td><td>" + singledata[2] + "</td>";
+                                if (singledata[0] == "beklemede")
+                                    inner = inner + "<td><button type=\"button\" id=\"iptal_" + singledata[4] + "\" >IPTAL</button></td>" + "<td><button type=\"button\" id=\"guncelle_" + singledata[4] + "\" >GUNCELLE</button></td>";
+                                inner = inner + "</tr>";
+                            }   
+                        }
+                        surectable.innerHTML = inner;
+                        if (alldata != "") {
+                            update_row_colors(alldata, alldata.length - 1);
+                            
+                            set_buttons(alldata, alldata.length-1);
+                        }
+                    }
+
+                }
+                var url = "ShowOrders.php?id=" + getCookie("ID");
+                xml.open("GET", url, true);
+                xml.send();
+            }
+            var show_order_interval = setInterval(show_orders,5000);
+            function set_buttons(alldata,size) {
+                for (var i = 0; i < size; ++i) {
+                    var data = alldata[i].split("*");
+                    var id = parseInt(data[4]);
+                    if (data[0] == "beklemede") {
+                        set_delete_button_event(id);
+                        set_update_button_event(id);
+                    }
+                
+                    }
+                        
+            }
+
+            function set_update_button_event(id) {
+                $("#guncelle_" + id).click(function () {
+                    var xml = new XMLHttpRequest();
+                    xml.onreadystatechange = function () {
+                        if (this.readyState == 4 && this.status == 200) {
+                            console.log(this.responseText);
+                            if(this.responseText != "error"){
+                                console.log("okkeeeey");
+                                
+                            var data = this.responseText.split("*");
+                            $("#submitorder").hide();
+                            $("#change_customer").hide();
+                            $("#sürec_tablosu").hide();
+                            //update getten data
+                            for(var i = 1 ; i < data.length ; ++i){
+                                console.log(id_array[i-1] + "  " + data[i]);
+                                document.getElementById(id_array[i-1]).innerHTML = data[i];
+
+                            }
+                            sum();
+                            $("#updateorder").show();
+                            document.cookie = "siparisNO=" + data[0] + "; expires=Thu, 18 Dec 2022 12:00:00 UTC";
+                            $("#iptal").show();
+                            }
+                            else{
+                                alert("sipariş durumu artık beklemede değildir, sonuç olarak sipariş artık güncellenemez.");
+                                show_orders();
+                            }
+                        }
+
+                    }
+                    var url = "getorderdata.php?id=" + id;
+                    xml.open("GET", url, true);
+                    xml.send();
+
+                });
+
+            }
+            function set_delete_button_event(id) {
+                $("#iptal_" + id).click(function () {
+
+                    var xml = new XMLHttpRequest();
+                    xml.onreadystatechange = function () {
+                        if (this.readyState == 4 && this.status == 200) {
+                            document.getElementById("temp").innerHTML = this.responseText;
+                            if(this.responseText == "error")
+                                alert("Sipariş durumu artık beklemede değil, sonuç olarak sipariş artık iptal edilemez.");
+                            show_orders();
+                            //update_admin_table
+                        }
+                    };
+
+                    var url = "siparis_iptal.php?id=" + id;
+                    console.log(url);
+                    xml.open("GET", url, true);
+                    xml.send();
+
+                });
+            }
+
+          
+            function update_row_colors(alldata, size) {
+               
+                for (var i = 0; i < size; ++i) {
+                    console.log("")
+                    var text = "#siparisid_" + i;
+                    var sp = alldata[i].split("*");
+                    if (sp[0] == "beklemede")
+                        $(text).css("background-color","yellow");
+                    else if (sp[0] == "hazirlaniyor")
+                        $(text).css("background-color", "green");
+                    else if(sp[0] == "teslim ediliyor")
+                        $(text).css("background-color", "red");
+                }
+
+
+            }
+            window.addEventListener("load", show_orders);
+        </script>
+     
+    </div>
+    <div id="server">
+        <p id="welcome_admin"></p>
+
+        <p> <button id="change_admin" type="button">Kullanıcıyı değiştir</button> </p>
+        <script>
+            $(document).ready(function () {
+                $("#change_admin").click(function () {
+                    document.cookie = "ID=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+                    document.cookie = "ROOM=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+                    $("#server").hide();
+                    $("#enterID").show();
+                });
+            });
+
+        </script>
+        <table id="admin_siparisler" border="1">
+            <caption><h3>TESLİM EDİLMEYİ BEKLEYEN SİPARİŞLER</h3></caption>
+            <tr>
+                <th>Sipariş teslim odası</th>
+                <th>Sipariş özeti</th>
+                <th>Tutar</th>
+                <th>Sipariş durumu</th>
+            </tr>
+ 
+        </table>
+
+
+    </div>
+    <script>
+        class teslim_ediliyor{  
+            constructor(){
+                this.timer = 0;
+                this.is_started = false;
+                this.id = -1;
+                }
+            update_time(){
+                if(this.is_started){
+                    this.timer = this.timer + 1;
+                    if(this.timer == 10){
+                            
+                            var xml = new XMLHttpRequest();
+                            xml.onreadystatechange = function(){
+                                if(this.readyState == 4 && this.status == 200){
+                                console.log(this.responseText);
+                                
+                                    show_admin_orders();
+                                }
+                            };
+                            var url = "siparis_teslim_edildi.php?id="+ this.id;
+                            xml.open("GET",url,true);
+                            xml.send();
+                            this.id = -1;
+                                this.timer = 0;
+                                this.is_started = false;
+                        }
+                }
+            }
+            add_id(id){
+                this.is_started = true;
+                this.id = id;
+            }
+
+        }
+        var teslim_control = new Array();
+        teslim_control[0] = new teslim_ediliyor();
+        teslim_control[1] = new teslim_ediliyor();
+        teslim_control[2] = new teslim_ediliyor();
+        
+
+
+
+        function show_admin_orders() {
+            var xml = new XMLHttpRequest;
+
+            xml.onreadystatechange = function () {
+                var datas = "";
+                if (this.readyState == 4 && this.status == 200) {
+                    datas = this.responseText.split("|");
+                    var table = document.getElementById("admin_siparisler");
+                    var innerhtml = "<caption>TESLİM EDİLMEYİ BEKLEYEN SİPARİŞLER</caption>" +
+                        "<tr><th>Sipariş teslim odası</th><th>Sipariş özeti</th> <th>Tutar</th> <th>Sipariş durumu</th><th>Sipariş durumunu güncelle </tr>" ;
+                    for (var i = 0; i < datas.length - 1; ++i) {
+                        var row = datas[i].split("*");
+                        innerhtml = innerhtml + "<tr id=\"" + row[4] + "\"><td>" + row[5] + "</td><td><h4>" + row[2] + "</h4></td><td>" + row[3] + " TL</td><td>" + row[0] + "</td>"; 
+                        if(i < 3){
+                            if(row[0] == "beklemede")
+                                innerhtml = innerhtml  +"<td><button type\"button\" id=\"hazirlaniyor_" + row[4] + "\" >hazırlanıyor</button></td></tr>";
+                            else if(row[0] == "hazirlaniyor")
+                                innerhtml = innerhtml  +"<td><button type\"button\" id=\"teslim_ediliyor_"+ row[4] + "\">teslim ediliyor</button></td></tr>" ;   
+                        }
+  
+
+                    }
+
+                    table.innerHTML = innerhtml;
+                    set_admin_buttons(datas,datas.length-1);
+
+                }
+            };
+
+            var url = "ShowAll.php?room=" + getCookie("ROOM");
+            xml.open("GET", url, true);
+            xml.send();
+        }
+        var show_admin_orders_interval = setInterval(show_admin_orders,5000);
+        
+        function set_admin_buttons(datas,size) {
+                for (var i = 0; i < size; ++i) {
+                    if(i < 3){
+                    var row = datas[i].split("*");
+                    var id = parseInt(row[4]);
+                    if(row[0] != "guncelleniyor"){
+                        if(row[0] == "beklemede")
+                            set_status_buttons(id,"hazirlaniyor");
+                        else if(row[0] == "hazirlaniyor")
+                            set_status_buttons(id,"teslim_ediliyor");
+                    }
+                    }
+                }
+
+            }
+            function set_status_buttons(siparis_id,idtag){
+
+$("#"+idtag+"_"+siparis_id).click(function (){
+    
+    var xml = new XMLHttpRequest();
+    xml.onreadystatechange = function (){
+        if (this.readyState == 4 && this.status == 200) {
+            console.log(this.responseText);
+            if(idtag == "teslim_ediliyor"){
+                
+                start_timer(siparis_id);
+            }
+            show_admin_orders();
+        }
+    };
+
+    var url = "siparis_durumu_guncelle.php?id="+siparis_id +"&new_status="+idtag;
+    xml.open("GET",url,true);
+    xml.send();
+
+});
+
+}
+function start_timer(id){
+    var siparis_id = parseInt(id);
+    for(var i = 0 ; i < teslim_control.length ; ++i){
+        if(!teslim_control[i].is_started){
+            console.log("teslim timer is started.");
+            teslim_control[i].add_id(siparis_id);
+            break;
+        }
+        else{
+            console.log("teslim " + i + " is full" );
+        }
+    }
+}
+function update_time_for_teslim(){
+    for(var i = 0 ; i < teslim_control.length ; ++i){
+        if(teslim_control[i].is_started)
+        teslim_control[i].update_time();
+    
+    }
+}
+        var teslim_interval = setInterval(update_time_for_teslim,1000);
+        window.addEventListener("load", show_admin_orders);
+
+
+    </script>
+
+
+
+
+
+
+    <script>
+        function getCookie(cname) {
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+
+        function control_cookie() {
+            //document.cookie = "ID=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+            var id = getCookie("ID");
+            var room = getCookie("ROOM");
+            if (parseInt(id) == admin_ID) {
+                $(document).ready(function () {
+                    $("#enterID").hide();
+                });
+                $(document).ready(function () {
+                    $("#server").show();
+                });
+                var welcome = document.getElementById("welcome_admin");
+
+                welcome.innerHTML = "<h3>Admin no:" + id + "  Oda no:" + room + "</h3>";
+            }
+           else if (id != "") {
+                $(document).ready(function () {
+                    $("#enterID").hide();
+                });
+                $(document).ready(function () {
+                    $("#client").show();
+                });
+              
+                var welcome = document.getElementById("welcome_client");
+
+                welcome.innerHTML = "<h3>Sicil no:" + id + "  Oda no:" + room + "</h3>";
+            }
+            else {
+                $(document).ready(function () {
+                    $("#enterID").show();
+                });
+            }
+        }
+        window.addEventListener("load", control_cookie);
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $("#submit").click(function () {
+
+                var room = document.getElementById("ROOM");
+                var check = check_room(parseInt(room.value));
+                var id = document.getElementById("ID");
+                if (parseInt(id.value) == admin_ID && check) {
+                    
+                    var admin_check = check_admin_room(parseInt(room.value));
+                    if (admin_check) {
+                        document.cookie = "ID=" + id.value + "; expires=Thu, 18 Dec 2022 12:00:00 UTC";
+                        document.cookie = "ROOM=" + room.value + "; expires=Thu, 18 Dec 2022 12:00:00 UTC";
+                            
+
+                    }
+                    else {
+                        var ocaknumaraları = "";
+                        for (var i = 0; i < ocaklar.length; ++i) {
+                            
+                            ocaknumaraları = ocaknumaraları + ocaklar[i] + ",";
+                        }
+                        alert("Oda " + room.value + " ocak numarası değildir.\nOcak numaraları: " + ocaknumaraları);
+                        id.value = "";
+                        room.value = "";
+                    }
+                }
+                 if (check) {
+                    document.cookie = "ID=" + id.value + "; expires=Thu, 18 Dec 2022 12:00:00 UTC";
+                    document.cookie = "ROOM=" + room.value + "; expires=Thu, 18 Dec 2022 12:00:00 UTC";
+                    control_cookie();
+                }
+                else {
+                    alert("Oda " + room.value + " mevcut değil.");
+                    id.value = "";
+                    room.value = "";
+                }
+                
+            });
+           
+        });
+        
+    </script>
+</body>
+</html>
